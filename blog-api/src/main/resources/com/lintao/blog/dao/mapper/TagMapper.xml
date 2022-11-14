@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lintao.blog.dao.mapper.TagMapper">
+
+    <!--List<Tag> findTagsByArticleId(Long articleId);-->
+    <select id="findTagsByArticleId" parameterType="long" resultType="com.lintao.blog.dao.pojo.Tag">
+        select id,avatar,tag_name
+        from ms_tag
+        where id in
+        (select tag_id from ms_article_tag where article_id=#{articleId})
+    </select>
+</mapper>
