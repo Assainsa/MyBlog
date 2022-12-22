@@ -2,6 +2,7 @@ package com.lintao.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lintao.blog.dao.dos.Archives;
 import com.lintao.blog.dao.mapper.ArticleMapper;
 import com.lintao.blog.dao.pojo.Article;
 import com.lintao.blog.service.ArticleService;
@@ -43,6 +44,34 @@ public class ArticleServiceImpl implements ArticleService {
         List<Article> records = articlePage1.getRecords();
         List<ArticleVo> articleVos = copyList(records,true,true);
         return Result.success(articleVos);
+    }
+
+    @Override
+    public Result hotArticle(int limit) {
+        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+        // select id, title from article order by view_counts desc limit 5
+        queryWrapper.orderByDesc(Article::getViewCounts);
+        queryWrapper.select(Article::getId,Article::getTitle);
+        queryWrapper.last("limit "+limit);
+        List<Article> articles = articleMapper.selectList(queryWrapper);
+        return Result.success(copyList(articles,false,false));
+    }
+
+    @Override
+    public Result newArticles(int limit) {
+        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+        // select id, title from article order by create_date desc limit 5
+        queryWrapper.orderByDesc(Article::getCreateDate);
+        queryWrapper.select(Article::getId,Article::getTitle);
+        queryWrapper.last("limit "+limit);
+        List<Article> articles = articleMapper.selectList(queryWrapper);
+        return Result.success(copyList(articles,false,false));
+    }
+
+    @Override
+    public Result listArchives() {
+        List<Archives> archivesList = articleMapper.listArchives();
+        return Result.success(archivesList);
     }
 
     /**
