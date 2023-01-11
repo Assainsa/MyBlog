@@ -20,4 +20,9 @@ public class SysUserServiceImpl implements SysUserService {
         }
         return sysUser;
     }
+
+    @Override
+    public SysUser findUser(String account, String password) {
+        return null;
+    }
 }
