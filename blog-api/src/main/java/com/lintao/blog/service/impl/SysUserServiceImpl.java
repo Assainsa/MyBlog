@@ -1,8 +1,15 @@
 package com.lintao.blog.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.lintao.blog.dao.mapper.SysUserMapper;
 import com.lintao.blog.dao.pojo.SysUser;
+import com.lintao.blog.service.LoginService;
 import com.lintao.blog.service.SysUserService;
+import com.lintao.blog.service.TokenService;
+import com.lintao.blog.vo.ErrorCode;
+import com.lintao.blog.vo.LoginUserVo;
+import com.lintao.blog.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +18,8 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Autowired
     private SysUserMapper sysUserMapper;
+    @Autowired
+    private TokenService tokenService;
     @Override
     public SysUser findUserById(Long id) {
         SysUser sysUser = sysUserMapper.selectById(id);
@@ -23,6 +32,25 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Override
     public SysUser findUser(String account, String password) {
-        return null;
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<SysUser>();
+        queryWrapper.eq(SysUser::getAccount,account);
+        queryWrapper.eq(SysUser::getPassword,password);
+        queryWrapper.select(SysUser::getAccount,SysUser::getId,SysUser::getAvatar,SysUser::getNickname);
+        queryWrapper.last("limit 1");
+        return sysUserMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public Result findUserByToken(String token) {
+        SysUser sysUser = tokenService.checkToken(token);
+        if (sysUser == null) {
+            return Result.fail(ErrorCode.TOKEN_INVALID.getCode(), ErrorCode.TOKEN_INVALID.getMsg());
+        }
+        LoginUserVo loginUserVo = new LoginUserVo();
+        loginUserVo.setId(sysUser.getId());
+        loginUserVo.setNickname(sysUser.getNickname());
+        loginUserVo.setAccount(sysUser.getAccount());
+        loginUserVo.setAvatar(sysUser.getAvatar());
+        return Result.success(loginUserVo);
     }
 }
