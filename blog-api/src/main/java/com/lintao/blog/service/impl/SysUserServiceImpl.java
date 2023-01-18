@@ -10,6 +10,8 @@ import com.lintao.blog.service.TokenService;
 import com.lintao.blog.vo.ErrorCode;
 import com.lintao.blog.vo.LoginUserVo;
 import com.lintao.blog.vo.Result;
+import com.lintao.blog.vo.UserVo;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ public class SysUserServiceImpl implements SysUserService {
         SysUser sysUser = sysUserMapper.selectById(id);
         if (sysUser==null){
             sysUser=new SysUser();
+            sysUser.setId(1L);
+            sysUser.setAvatar("/static/img/logo.b3a48c0.png");
             sysUser.setNickname("无");
         }
         return sysUser;
@@ -66,5 +70,13 @@ public class SysUserServiceImpl implements SysUserService {
     public void save(SysUser sysUser) {
         //保存用户时id会自动生成，这个地方默认的id时分布式id，采用雪花算法
         sysUserMapper.insert(sysUser);
+    }
+
+    @Override
+    public UserVo findUserVoById(Long authorId) {
+        SysUser user = findUserById(authorId);
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(user,userVo);
+        return userVo;
     }
 }

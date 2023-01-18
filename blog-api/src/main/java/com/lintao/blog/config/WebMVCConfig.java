@@ -23,6 +23,7 @@ public class WebMVCConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         //先拦截test接口，后续遇到需要拦截的接口时再配置为真正的拦截接口
-        registry.addInterceptor(loginInterceptor).addPathPatterns("/test");
+        registry.addInterceptor(loginInterceptor).addPathPatterns("/test")
+                .addPathPatterns("/comments/create/change");
     }
 }

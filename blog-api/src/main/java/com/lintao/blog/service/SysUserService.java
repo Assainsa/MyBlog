@@ -2,6 +2,7 @@ package com.lintao.blog.service;
 
 import com.lintao.blog.dao.pojo.SysUser;
 import com.lintao.blog.vo.Result;
+import com.lintao.blog.vo.UserVo;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
@@ -29,4 +30,6 @@ public interface SysUserService{
      * @param sysUser
      */
     void save(SysUser sysUser);
+
+    UserVo findUserVoById(Long authorId);
 }

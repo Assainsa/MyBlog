@@ -5,18 +5,16 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.util.List;
+
 @Data
-public class ArticleVo {
+public class CommentVo {
+    //为了防止前端精度损失，把id转为String，解决分布式id过长有精度损失的问题
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
-    private String title;
-    private String summary;
-    private Integer commentCounts;
-    private Integer viewCounts;
-    private Integer weight;
+    private UserVo author;
+    private String content;
+    private List<CommentVo> childrens;
     private String createDate;
-    private String author;
-    private ArticleBodyVo body;
-    private List<TagVo> tags;
-    private CategoryVo category;
+    private Integer level;
+    private UserVo toUser;
 }

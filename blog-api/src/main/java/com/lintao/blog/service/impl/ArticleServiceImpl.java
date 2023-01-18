@@ -7,10 +7,7 @@ import com.lintao.blog.dao.mapper.ArticleBodyMapper;
 import com.lintao.blog.dao.mapper.ArticleMapper;
 import com.lintao.blog.dao.pojo.Article;
 import com.lintao.blog.dao.pojo.ArticleBody;
-import com.lintao.blog.service.ArticleService;
-import com.lintao.blog.service.CategoryService;
-import com.lintao.blog.service.SysUserService;
-import com.lintao.blog.service.TagService;
+import com.lintao.blog.service.*;
 import com.lintao.blog.vo.ArticleBodyVo;
 import com.lintao.blog.vo.ArticleVo;
 import com.lintao.blog.vo.Result;
@@ -38,6 +35,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private ThreadService threadService;
 
     /**
      * 分页查询article数据库表，得到结果
@@ -94,6 +93,8 @@ public class ArticleServiceImpl implements ArticleService {
     public Result findArticleById(Long articleId) {
         Article article = articleMapper.selectById(articleId);
         ArticleVo articleVo = copy(article, true, true,true,true);
+        //把更新阅读次数放入线程池中进行操作，与主线程隔离
+        threadService.updateArticleViewCount(articleMapper,article);
         return Result.success(articleVo);
     }
 
