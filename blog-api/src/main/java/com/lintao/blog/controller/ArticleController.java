@@ -1,13 +1,15 @@
 package com.lintao.blog.controller;
 
+import com.lintao.blog.common.aop.LogAnnotation;
 import com.lintao.blog.service.ArticleService;
 import com.lintao.blog.vo.Result;
+import com.lintao.blog.vo.params.ArticleParam;
 import com.lintao.blog.vo.params.PageParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController //json数据进行交互
-@RequestMapping("/articles")
+@RequestMapping("articles")
 public class ArticleController {
 
     @Autowired
@@ -18,6 +20,7 @@ public class ArticleController {
      * @param pageParams
      * @return
      */
+    @LogAnnotation(module = "文章", operator = "获取文章列表")
     @PostMapping
     public Result listArticle(@RequestBody PageParams pageParams){
         return articleService.listArticle(pageParams);
@@ -57,5 +60,10 @@ public class ArticleController {
     @PostMapping("view/{id}")
     public Result findArticleById(@PathVariable("id") Long articleId){
         return articleService.findArticleById(articleId);
+    }
+
+    @PostMapping("publish")
+    public Result publish(@RequestBody ArticleParam articleParam){
+        return articleService.publish(articleParam);
     }
 }

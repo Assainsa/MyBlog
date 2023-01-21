@@ -1,6 +1,7 @@
 package com.lintao.blog.service;
 
 import com.lintao.blog.vo.Result;
+import com.lintao.blog.vo.params.ArticleParam;
 import com.lintao.blog.vo.params.PageParams;
 
 public interface ArticleService {
@@ -38,4 +39,6 @@ public interface ArticleService {
      * @return
      */
     Result findArticleById(Long articleId);
+
+    Result publish(ArticleParam articleParam);
 }
