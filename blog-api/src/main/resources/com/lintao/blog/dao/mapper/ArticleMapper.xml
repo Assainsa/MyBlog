@@ -3,9 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lintao.blog.dao.mapper.ArticleMapper">
-    <select id="listArchives" resultType="com.lintao.blog.dao.dos.Archives">
-        select year(FROM_UNIXTIME(create_date/1000)) as year, month(FROM_UNIXTIME(create_date/1000)) as month, count(*) as count
+    <!--<select id="listArchives" resultType="com.lintao.blog.dao.dos.Archives">
+        select (FROM_UNIXTIME(create_date/1000, '%Y')) as year, (FROM_UNIXTIME(create_date/1000, '%m')) as month, count(*) as count
         from ms_article
         group by year, month
+    </select>-->
+    <select id="listArchives" resultType="com.lintao.blog.dao.dos.Archives">
+        select year(create_date) as year, month(create_date) as month, count(*) as count
+        from ms_article
+        group by year, month
+    </select>
+
+    <select id="listArticle" resultType="com.lintao.blog.dao.pojo.Article">
+        select * from ms_article
+        <where>
+            <if test="categoryId != null">
+                and category_id=#{categoryId}
+            </if>
+            <if test="tagId != null">
+                and id in (select article_id from ms_article_tag where tag_id=#{tagId})
+            </if>
+            <if test="year != null and year.length>0 and month!=null and month.length>0">
+                and year(create_date) = #{year} and month(create_date) = #{month}
+            </if>
+        </where>
+        order by weight desc, create_date desc
     </select>
 </mapper>

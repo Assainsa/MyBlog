@@ -6,6 +6,7 @@ import com.lintao.blog.dao.pojo.Comment;
 import com.lintao.blog.dao.pojo.SysUser;
 import com.lintao.blog.service.CommentService;
 import com.lintao.blog.service.SysUserService;
+import com.lintao.blog.service.ThreadService;
 import com.lintao.blog.utils.UserThreadLocal;
 import com.lintao.blog.vo.CommentVo;
 import com.lintao.blog.vo.Result;
@@ -15,7 +16,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -24,6 +27,9 @@ public class CommentServiceImpl implements CommentService {
     private CommentMapper commentMapper;
     @Autowired
     private SysUserService sysUserService;
+
+    @Autowired
+    private ThreadService threadService;
 
     /**
      * 1. 根据文章id查询评论列表，从comment表中获取
@@ -50,7 +56,10 @@ public class CommentServiceImpl implements CommentService {
         comment.setArticleId(commentParam.getArticleId());
         comment.setAuthorId(sysUser.getId());
         comment.setContent(commentParam.getContent());
-        comment.setCreateDate(System.currentTimeMillis());
+        Date date = new Date();
+        date.setTime(System.currentTimeMillis());
+        String formatTime = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
+        comment.setCreateDate(Long.valueOf(formatTime));
         Long parent = commentParam.getParent();
         if (parent==null||parent==0){
             comment.setLevel(1);
@@ -61,6 +70,16 @@ public class CommentServiceImpl implements CommentService {
         Long toUserId = commentParam.getToUserId();
         comment.setToUid(toUserId==null?0:toUserId);
         commentMapper.insert(comment);
+        //更新文章的评论数
+        threadService.updateCommentCounts(comment);
+        return Result.success(copy(comment));
+    }
+
+    @Override
+    public Result deleteCommentByArticleId(Long articleId) {
+        LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Comment::getArticleId,articleId);
+        commentMapper.delete(queryWrapper);
         return Result.success(null);
     }
 

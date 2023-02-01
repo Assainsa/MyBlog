@@ -1,9 +1,11 @@
 package com.lintao.blog.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.lintao.blog.dao.mapper.TagMapper;
 import com.lintao.blog.dao.pojo.Tag;
 import com.lintao.blog.service.TagService;
+import com.lintao.blog.vo.ErrorCode;
 import com.lintao.blog.vo.Result;
 import com.lintao.blog.vo.TagVo;
 import org.springframework.beans.BeanUtils;
@@ -60,5 +62,26 @@ public class TagServiceImpl implements TagService {
     public Result findAll() {
         List<Tag> tags = tagMapper.selectList(null);
         return Result.success(copyList(tags));
+    }
+
+    @Override
+    public Result findTagById(Long id) {
+        Tag tag = tagMapper.selectById(id);
+        return Result.success(copy(tag));
+    }
+
+    @Override
+    public Result addTag(String tagName) {
+        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Tag::getTagName,tagName);
+        Tag exist = tagMapper.selectOne(queryWrapper);
+        if (exist!=null){
+            return Result.fail(ErrorCode.ALREADY_EXIST.getCode(), ErrorCode.ALREADY_EXIST.getMsg());
+        }
+        Tag tag = new Tag();
+        tag.setTagName(tagName);
+        tag.setAvatar("/static/tag/tag.png");
+        tagMapper.insert(tag);
+        return Result.success(null);
     }
 }

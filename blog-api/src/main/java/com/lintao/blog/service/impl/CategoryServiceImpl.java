@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.alibaba.fastjson.JSONPatch.OperationType.copy;
+
 @Service
 public class CategoryServiceImpl implements CategoryService {
     @Autowired
@@ -27,6 +29,11 @@ public class CategoryServiceImpl implements CategoryService {
     public Result findAll() {
         List<Category> categories = categoryMapper.selectList(null);
         return Result.success(copyList(categories));
+    }
+
+    @Override
+    public Result findCategoryDetailById(Long id) {
+        return Result.success(findCategoryById(id));
     }
 
     private CategoryVo copy(Category category){

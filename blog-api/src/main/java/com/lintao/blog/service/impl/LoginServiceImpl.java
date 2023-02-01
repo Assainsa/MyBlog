@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.lintao.blog.dao.pojo.SysUser;
 import com.lintao.blog.service.LoginService;
 import com.lintao.blog.service.SysUserService;
+import com.lintao.blog.service.ThreadService;
 import com.lintao.blog.utils.JWTUtils;
 import com.lintao.blog.vo.ErrorCode;
 import com.lintao.blog.vo.Result;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +27,8 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Autowired
+    private ThreadService threadService;
     private static final String salt = "mszlu!@#"; //登录加密盐，用来加强password的md5加密效果
     /**
      * 登录功能
@@ -50,6 +54,8 @@ public class LoginServiceImpl implements LoginService {
         }
         String token = JWTUtils.createToken(sysUser.getId());
         redisTemplate.opsForValue().set("TOKEN_"+token, JSON.toJSONString(sysUser),1, TimeUnit.DAYS); //这里用fastJSON来转换用户信息
+        //在线程池里更新lastLoginDate
+        threadService.updateLastLogin(sysUser);
         return Result.success(token);
     }
 
@@ -83,8 +89,8 @@ public class LoginServiceImpl implements LoginService {
         sysUser.setNickname(nickname);
         sysUser.setAccount(account);
         sysUser.setPassword(DigestUtils.md5Hex(password+salt));
-        sysUser.setCreateDate(System.currentTimeMillis());
-        sysUser.setLastLogin(System.currentTimeMillis());
+        sysUser.setCreateDate(Long.valueOf(new SimpleDateFormat("yyyyMMddHHmmss").format(System.currentTimeMillis())));
+        sysUser.setLastLogin(Long.valueOf(new SimpleDateFormat("yyyyMMddHHmmss").format(System.currentTimeMillis())));
         sysUser.setAvatar("/static/img/logo.b3a48c0.png");
         sysUser.setAdmin(1); //1 为true
         sysUser.setDeleted(0); // 0 为false

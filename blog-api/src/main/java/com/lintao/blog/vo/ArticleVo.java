@@ -15,7 +15,7 @@ public class ArticleVo {
     private Integer viewCounts;
     private Integer weight;
     private String createDate;
-    private String author;
+    private UserVo author;
     private ArticleBodyVo body;
     private List<TagVo> tags;
     private CategoryVo category;

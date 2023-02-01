@@ -10,6 +10,11 @@ spring:
   redis:
     host: 43.136.59.155
     password: 168223
+#上传文件配置
+  servlet:
+    multipart:
+      max-request-size: 20MB
+      max-file-size: 2MB
 
 server:
   port: 8888
@@ -22,3 +27,13 @@ mybatis-plus:
   global-config:
     db-config:
       table-prefix: ms_
+
+#七牛云相关配置
+qiniu:
+  accessKey: bgsk1h-Cbkjx7ELwT2uQTRqpZc76JctxiT4QRwIR
+  accessSecretKey: mJfYRoEmgsNbMNS2l5sqtUuSTitrcfnbzKvoaobQ
+  url: http://rovo5kjl1.hn-bkt.clouddn.com/
+  bucket: blog-image-zlt
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true

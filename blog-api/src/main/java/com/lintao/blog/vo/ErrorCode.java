@@ -7,7 +7,10 @@ public enum ErrorCode {
     NO_PERMISSION(70001,"无访问权限"),
     SESSION_TIME_OUT(90001,"会话超时"),
     NO_LOGIN(90002,"未登录"),
-    ACCOUNT_EXIST(10004,"账户已存在"),;
+    ACCOUNT_EXIST(10004,"账户已存在"),
+    UPLOAD_FAILED(20001,"上传失败"),
+    SYSTEM_ERROR(-999,"系统错误"),
+    ALREADY_EXIST(10005,"已存在相同标签");
 
 
     private int code;

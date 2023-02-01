@@ -58,7 +58,7 @@ public class LogAspect {
 
         //请求的参数
         Object[] args = joinPoint.getArgs();
-        String params = JSON.toJSONString(args[0]);
+        String params = JSON.toJSONString(args);
         log.info("params:{}",params);
 
         //获取request的IP地址
