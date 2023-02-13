@@ -4,7 +4,6 @@ import com.lintao.blog.dao.pojo.SysUser;
 import com.lintao.blog.vo.Result;
 import com.lintao.blog.vo.UserVo;
 import com.lintao.blog.vo.params.LoginParam;
-import com.lintao.blog.vo.params.UserParam;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
@@ -36,4 +35,6 @@ public interface SysUserService{
     UserVo findUserVoById(Long authorId);
 
     Result updateUser(LoginParam user, String token);
+
+    SysUser findUserByNickName(String nickname);
 }

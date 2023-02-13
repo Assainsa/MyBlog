@@ -1,16 +1,21 @@
 package com.lintao.blog.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
+import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
+import com.qiniu.storage.model.BatchStatus;
 import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.util.Auth;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Component
 public class QiniuUtils {
 
@@ -50,5 +55,30 @@ public class QiniuUtils {
             ex.printStackTrace();
         }
         return false;
+    }
+
+    public boolean deleteFiles(String[] keyList){
+        try {
+            Configuration cfg = new Configuration(Region.huanan());
+            Auth auth = Auth.create(accessKey, secretAccessKey);
+            BucketManager bucketManager = new BucketManager(auth, cfg);
+            BucketManager.BatchOperations batchOperations = new BucketManager.BatchOperations();
+            batchOperations.addDeleteOp(bucket, keyList);
+            Response response = bucketManager.batch(batchOperations);
+            BatchStatus[] batchStatusList = response.jsonToObject(BatchStatus[].class);
+            log.info("--------------开始删除文件--------------------");
+            for (int i = 0; i < keyList.length; i++) {
+                BatchStatus status = batchStatusList[i];
+                String key = keyList[i];
+                if (status.code == 200) {
+                    log.info("delete success:{}",key);
+                } else {
+                    log.info("delete failure !!:{}",key);
+                }
+            }
+        } catch (QiniuException ex) {
+            ex.printStackTrace();
+        }
+        return true;
     }
 }

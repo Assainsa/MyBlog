@@ -12,6 +12,7 @@
         select year(create_date) as year, month(create_date) as month, count(*) as count
         from ms_article
         group by year, month
+        order by year desc, month desc
     </select>
 
     <select id="listArticle" resultType="com.lintao.blog.dao.pojo.Article">

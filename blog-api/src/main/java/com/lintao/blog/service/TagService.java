@@ -16,4 +16,6 @@ public interface TagService {
     Result findTagById(Long id);
 
     Result addTag(String tagName);
+
+    Result deleteTag(Long tagId);
 }

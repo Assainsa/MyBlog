@@ -26,4 +26,6 @@ public interface LoginService {
      * @return
      */
     Result register(LoginParam loginParam);
+
+    Result getInvitationCode();
 }

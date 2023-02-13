@@ -4,20 +4,25 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lintao.blog.common.cache.Cache;
 import com.lintao.blog.dao.dos.Archives;
 import com.lintao.blog.dao.mapper.ArticleBodyMapper;
 import com.lintao.blog.dao.mapper.ArticleMapper;
 import com.lintao.blog.dao.mapper.ArticleTagMapper;
 import com.lintao.blog.dao.pojo.*;
 import com.lintao.blog.service.*;
+import com.lintao.blog.utils.QiniuUtils;
 import com.lintao.blog.utils.UserThreadLocal;
 import com.lintao.blog.vo.*;
 import com.lintao.blog.vo.params.ArticleParam;
 import com.lintao.blog.vo.params.PageParams;
 import com.lintao.blog.vo.params.SearchParam;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -46,6 +51,8 @@ public class ArticleServiceImpl implements ArticleService {
     private CommentService commentService;
     @Autowired
     private ThreadService threadService;
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
     /**
      * 分页查询article数据库表，得到结果
@@ -119,14 +126,11 @@ public class ArticleServiceImpl implements ArticleService {
      * @param articleId
      * @return
      */
+    @Cache(expire = 5*60*1000,name = "view_Article")
     @Override
-    public Result findArticleById(Long articleId, boolean view) {
+    public Result findArticleById(Long articleId) {
         Article article = articleMapper.selectById(articleId);
         ArticleVo articleVo = copy(article, true, true,true,true);
-        //把更新阅读次数放入线程池中进行操作，与主线程隔离
-        if (view) {
-            threadService.updateArticleViewCount(article);
-        }
         return Result.success(articleVo);
     }
 
@@ -147,10 +151,14 @@ public class ArticleServiceImpl implements ArticleService {
         article.setTitle(articleParam.getTitle());
         article.setSummary(articleParam.getSummary());
         article.setCategoryId(articleParam.getCategory().getId());
-        article.setCreateDate(Long.valueOf(new SimpleDateFormat("yyyyMMddHHmmss").format(System.currentTimeMillis())));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+        article.setCreateDate(Long.valueOf(dateFormat.format(System.currentTimeMillis())));
         List<TagVo> tags = articleParam.getTags();
         Long articleId;
-        if (articleParam.getId()!=null){
+        boolean isEdit=false;
+        if (articleParam.getId()!=null) isEdit = true;
+        if (isEdit){
             article.setId(articleParam.getId());
             //删掉原来存在的tag
             LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
@@ -189,6 +197,10 @@ public class ArticleServiceImpl implements ArticleService {
         articleMapper.updateById(article);
         Map<String, String> map = new HashMap<>();
         map.put("id",article.getId().toString());
+        //发一条信息给rocketmq，当前文章更新/发布了，更新一下缓存
+        ArticleMessage articleMessage = new ArticleMessage();
+        articleMessage.setArticleId(article.getId());
+        rocketMQTemplate.convertAndSend("blog-update-article",articleMessage);
         return Result.success(map);
     }
 
@@ -205,9 +217,12 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Result deleteArticleById(Long articleId) {
         articleMapper.deleteById(articleId);
-        //删除articleBody
         LambdaQueryWrapper<ArticleBody> bodyLambdaQueryWrapper = new LambdaQueryWrapper<>();
         bodyLambdaQueryWrapper.eq(ArticleBody::getArticleId,articleId);
+        //丢给线程池，在对象存储中删除文章里包含的图片文件
+        ArticleBody articleBody = articleBodyMapper.selectOne(bodyLambdaQueryWrapper);
+        threadService.deleteImages(articleBody);
+        //删除articleBody
         articleBodyMapper.delete(bodyLambdaQueryWrapper);
         //删除articleTag
         LambdaQueryWrapper<ArticleTag> tagLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -215,6 +230,9 @@ public class ArticleServiceImpl implements ArticleService {
         articleTagMapper.delete(tagLambdaQueryWrapper);
         //删除comment
         Result deleteResult = commentService.deleteCommentByArticleId(articleId);
+        //发一条信息给rocketmq，当前文章更新了，更新一下缓存
+        ArticleMessage articleMessage = new ArticleMessage();
+        rocketMQTemplate.convertAndSend("blog-update-article",articleMessage);
         return deleteResult;
     }
 
@@ -224,6 +242,15 @@ public class ArticleServiceImpl implements ArticleService {
         queryWrapper.eq(Article::getAuthorId,authorId);
         List<Article> articles = articleMapper.selectList(queryWrapper);
         return Result.success(copyList(articles,true,true,true,true));
+    }
+
+    @Override
+    public Result processArticleById(Long articleId, boolean view) {
+        //把更新阅读次数放入线程池中进行操作，与主线程隔离
+        if (view) {
+            threadService.updateArticleViewCount(articleId);
+        }
+        return findArticleById(articleId);
     }
 
     /*@Override

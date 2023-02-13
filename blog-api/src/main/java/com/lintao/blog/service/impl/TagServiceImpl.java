@@ -2,12 +2,16 @@ package com.lintao.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.lintao.blog.dao.mapper.ArticleTagMapper;
 import com.lintao.blog.dao.mapper.TagMapper;
+import com.lintao.blog.dao.pojo.ArticleTag;
 import com.lintao.blog.dao.pojo.Tag;
 import com.lintao.blog.service.TagService;
+import com.lintao.blog.vo.ArticleMessage;
 import com.lintao.blog.vo.ErrorCode;
 import com.lintao.blog.vo.Result;
 import com.lintao.blog.vo.TagVo;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,11 @@ import java.util.List;
 public class TagServiceImpl implements TagService {
     @Autowired
     private TagMapper tagMapper;
+    @Autowired
+    private ArticleTagMapper articleTagMapper;
+
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
     @Override
     public List<TagVo> findTagsByArticleId(Long articleId) {
         List<Tag> tags = tagMapper.findTagsByArticleId(articleId);
@@ -82,6 +91,18 @@ public class TagServiceImpl implements TagService {
         tag.setTagName(tagName);
         tag.setAvatar("/static/tag/tag.png");
         tagMapper.insert(tag);
+        return Result.success(null);
+    }
+
+    @Override
+    public Result deleteTag(Long tagId) {
+        LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ArticleTag::getTagId,tagId);
+        articleTagMapper.delete(queryWrapper);
+        tagMapper.deleteById(tagId);
+        //发一条信息给rocketmq，当前文章更新/发布了，更新一下缓存
+        ArticleMessage articleMessage = new ArticleMessage();
+        rocketMQTemplate.convertAndSend("blog-update-article",articleMessage);
         return Result.success(null);
     }
 }

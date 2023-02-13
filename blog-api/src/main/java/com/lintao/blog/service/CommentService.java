@@ -16,4 +16,6 @@ public interface CommentService {
     Result comment(CommentParam commentParam);
 
     Result deleteCommentByArticleId(Long articleId);
+
+    Result deleteCommentById(Long id);
 }

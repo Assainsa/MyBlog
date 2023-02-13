@@ -4,7 +4,6 @@ import com.lintao.blog.common.aop.LogAnnotation;
 import com.lintao.blog.service.SysUserService;
 import com.lintao.blog.vo.Result;
 import com.lintao.blog.vo.params.LoginParam;
-import com.lintao.blog.vo.params.UserParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

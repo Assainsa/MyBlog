@@ -12,4 +12,5 @@ public class Comment {
     private Long parentId;
     private Long toUid;
     private Integer level;
+    private Integer deleted;
 }

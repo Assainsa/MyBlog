@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -30,6 +31,7 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private ThreadService threadService;
     private static final String salt = "mszlu!@#"; //登录加密盐，用来加强password的md5加密效果
+    private static final String invitation = "INVITATION_CODE"; //redis中invitationcode的key
     /**
      * 登录功能
      * 1.检查参数是否合法
@@ -78,6 +80,7 @@ public class LoginServiceImpl implements LoginService {
         String account = loginParam.getAccount();
         String password = loginParam.getPassword();
         String nickname = loginParam.getNickname();
+        String avatar = loginParam.getAvatar();
         if (StringUtils.isBlank(account)||StringUtils.isBlank(password)||StringUtils.isBlank(nickname)){
             return Result.fail(ErrorCode.PARAMS_ERROR.getCode(), ErrorCode.PARAMS_ERROR.getMsg());
         }
@@ -85,14 +88,24 @@ public class LoginServiceImpl implements LoginService {
         if (sysUser != null){
             return Result.fail(ErrorCode.ACCOUNT_EXIST.getCode(),ErrorCode.ACCOUNT_EXIST.getMsg());
         }
+        sysUser = sysUserService.findUserByNickName(nickname);
+        if (sysUser != null){
+            return Result.fail(ErrorCode.NICKNAME_EXIST.getCode(), ErrorCode.NICKNAME_EXIST.getMsg());
+        }
         sysUser = new SysUser();
         sysUser.setNickname(nickname);
         sysUser.setAccount(account);
         sysUser.setPassword(DigestUtils.md5Hex(password+salt));
-        sysUser.setCreateDate(Long.valueOf(new SimpleDateFormat("yyyyMMddHHmmss").format(System.currentTimeMillis())));
-        sysUser.setLastLogin(Long.valueOf(new SimpleDateFormat("yyyyMMddHHmmss").format(System.currentTimeMillis())));
-        sysUser.setAvatar("/static/img/logo.b3a48c0.png");
-        sysUser.setAdmin(1); //1 为true
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+        sysUser.setCreateDate(Long.valueOf(dateFormat.format(System.currentTimeMillis())));
+        sysUser.setLastLogin(Long.valueOf(dateFormat.format(System.currentTimeMillis())));
+        if (StringUtils.isBlank(avatar)){
+            sysUser.setAvatar("/static/user/user_1.png");
+        }else {
+            sysUser.setAvatar(avatar);
+        }
+        sysUser.setAdmin(0); //1 为true
         sysUser.setDeleted(0); // 0 为false
         sysUser.setSalt("");
         sysUser.setStatus("");
@@ -103,5 +116,14 @@ public class LoginServiceImpl implements LoginService {
 
         redisTemplate.opsForValue().set("TOKEN_"+token, JSON.toJSONString(sysUser),1,TimeUnit.DAYS);
         return Result.success(token);
+    }
+
+    @Override
+    public Result getInvitationCode() {
+        String code = redisTemplate.opsForValue().get(invitation);
+        if (StringUtils.isBlank(code)){
+            return Result.success("TZSBLOG");
+        }
+        return Result.success(code);
     }
 }

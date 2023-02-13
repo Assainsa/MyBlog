@@ -23,7 +23,6 @@ public class ArticleController {
      * @return
      */
     @LogAnnotation(module = "文章", operator = "获取文章列表")
-    /*@Cache(expire = 5*60*1000,name = "list_article")*/
     @PostMapping
     public Result listArticle(@RequestBody PageParams pageParams){
         return articleService.listArticle(pageParams);
@@ -35,7 +34,7 @@ public class ArticleController {
      * @return
      */
     @LogAnnotation(module = "文章", operator = "获取最热文章")
-    /*@Cache(expire = 5*60*1000,name = "hot_article")*/
+    @Cache(expire = 5*60*1000,name = "hot_article")
     @PostMapping("hot")
     public Result hotArticle(){
         int limit = 5;
@@ -48,7 +47,7 @@ public class ArticleController {
      * @return
      */
     @LogAnnotation(module = "文章", operator = "获取最新文章")
-    /*@Cache(expire = 5*60*1000,name = "new_article")*/
+    @Cache(expire = 5*60*1000,name = "new_article")
     @PostMapping("new")
     public Result newArticles(){
         int limit = 5;
@@ -59,6 +58,8 @@ public class ArticleController {
      * 文章归档
      * @return
      */
+    @LogAnnotation(module = "文章", operator = "文章归档")
+    @Cache(expire = 5*60*1000,name = "list_Archives")
     @PostMapping("listArchives")
     public Result listArchives(){
         return articleService.listArchives();
@@ -66,7 +67,7 @@ public class ArticleController {
 
     @PostMapping("view/{id}")
     public Result findArticleById(@PathVariable("id") Long articleId){
-        return articleService.findArticleById(articleId, true);
+        return articleService.processArticleById(articleId, true);
     }
 
     @PostMapping("publish")
@@ -76,7 +77,7 @@ public class ArticleController {
 
     @PostMapping("{id}")
     public Result getArticleById(@PathVariable("id") Long articleId){
-        return articleService.findArticleById(articleId,false);
+        return articleService.processArticleById(articleId,false);
     }
 
     @PostMapping("search")
@@ -93,11 +94,4 @@ public class ArticleController {
     public Result getArticleByAuthorId(@PathVariable("id") Long authorId){
         return articleService.findArticleByAuthorId(authorId);
     }
-    /**
-     * 更新所有文章的时间为新格式
-     */
-    /*@GetMapping("updateTime")
-    public Result updateTime(){
-        return articleService.updateTime();
-    }*/
 }

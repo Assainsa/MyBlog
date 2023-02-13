@@ -39,7 +39,7 @@ public interface ArticleService {
      * @param articleId
      * @return
      */
-    Result findArticleById(Long articleId, boolean view);
+    Result findArticleById(Long articleId);
 
     Result publish(ArticleParam articleParam);
 
@@ -48,6 +48,8 @@ public interface ArticleService {
     Result deleteArticleById(Long articleId);
 
     Result findArticleByAuthorId(Long authorId);
+
+    Result processArticleById(Long articleId, boolean view);
 
     /*    Result updateTime();*/
 }

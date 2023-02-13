@@ -71,7 +71,7 @@ public class CacheAspect {
             String redisKey = name + "::" + className+"::"+methodName+"::"+params;
             String redisValue = redisTemplate.opsForValue().get(redisKey);
             if (StringUtils.isNotEmpty(redisValue)){
-                log.info("从缓存中获取:{}.{}",className,methodName);
+                log.info("从缓存中获取:{}",redisKey);
                 return JSON.parseObject(redisValue, Result.class);
             }
             //如果redis里没有，就执行方法，然后把执行结果放入redis中

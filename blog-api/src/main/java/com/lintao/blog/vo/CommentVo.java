@@ -17,4 +17,5 @@ public class CommentVo {
     private String createDate;
     private Integer level;
     private UserVo toUser;
+    private Integer deleted;
 }

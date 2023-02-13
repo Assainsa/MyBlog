@@ -1,22 +1,26 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=UTF-8&serverTimeZone=UTC
+    url: jdbc:mysql://172.17.0.5:3306/blog?useUnicode=true&characterEncoding=UTF-8&serverTimeZone=UTC
     username: root
     password: root123
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   application:
     name: lintao_blog
   redis:
-    host: 43.136.59.155
+    host: 172.17.0.6
     password: root123
-#上传文件配置
+    port: 6379
+  #上传文件配置
   servlet:
     multipart:
       max-request-size: 20MB
       max-file-size: 5MB
+  mvc:
+    servlet:
+      path: /api
 rocketmq:
-  name-server: 43.136.59.155:9876
+  name-server: 172.17.0.2:9876
   producer:
     group: blog_group
 server:
@@ -37,7 +41,6 @@ qiniu:
   accessSecretKey: mJfYRoEmgsNbMNS2l5sqtUuSTitrcfnbzKvoaobQ
   url: http://rovo5kjl1.hn-bkt.clouddn.com/
   bucket: blog-image-zlt
-
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

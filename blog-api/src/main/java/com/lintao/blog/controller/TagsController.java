@@ -1,5 +1,7 @@
 package com.lintao.blog.controller;
 
+import com.lintao.blog.common.aop.LogAnnotation;
+import com.lintao.blog.common.cache.Cache;
 import com.lintao.blog.service.TagService;
 import com.lintao.blog.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +14,8 @@ public class TagsController {
     @Autowired
     private TagService tagService;
 
-    // /tags/hot
+    @LogAnnotation(module = "标签", operator = "获取最热标签")
+    @Cache(expire = 5*60*1000,name = "hot_tag")
     @GetMapping("hot")
     public Result hot(){
         int limit=6;    //查询最热的6个标签
@@ -37,5 +40,10 @@ public class TagsController {
     @GetMapping("add/{tagName}")
     public Result addTag(@PathVariable("tagName") String tagName){
         return tagService.addTag(tagName);
+    }
+
+    @GetMapping("delete/{tagId}")
+    public Result deleteTag(@PathVariable("tagId") Long tagName){
+        return tagService.deleteTag(tagName);
     }
 }

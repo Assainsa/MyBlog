@@ -31,7 +31,7 @@ public class UploadController {
     @PostMapping
     public Result upload(@RequestParam("image") MultipartFile file){
         String originalFilename = file.getOriginalFilename();
-        String filename = UUID.randomUUID().toString() + "." + StringUtils.substringAfter(originalFilename, ".");
+        String filename = UUID.randomUUID() + "." + StringUtils.substringAfter(originalFilename, ".");
         boolean upload = qiniuUtils.upload(file, filename);
         if (upload){
             return Result.success(qiniuUrl+filename);
