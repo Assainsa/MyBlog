@@ -56,15 +56,16 @@ public class ArticleServiceImpl implements ArticleService {
 
     /**
      * 分页查询article数据库表，得到结果
+     *
      * @param pageParams
      * @return
      */
     @Override
     public Result listArticle(PageParams pageParams) {
-        Page<Article> articlePage = new Page<>(pageParams.getPage(),pageParams.getPageSize());
-        IPage<Article> articleIPage = articleMapper.listArticle(articlePage, pageParams.getCategoryId(), pageParams.getTagId(), pageParams.getYear(), pageParams.getMonth());
+        Page<Article> articlePage = new Page<>(pageParams.getPage(), pageParams.getPageSize());
+        IPage<Article> articleIPage = articleMapper.listArticle(articlePage, pageParams.getCategoryId(), pageParams.getTagId(), pageParams.getYear(), pageParams.getMonth(), pageParams.getAuthorId());
         List<Article> records = articleIPage.getRecords();
-        return Result.success(copyList(records,true,true));
+        return Result.success(copyList(records, true, true));
 
         /*Page<Article> articlePage = new Page<>(pageParams.getPage(),pageParams.getPageSize());
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
@@ -93,14 +94,14 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Result  hotArticle(int limit) {
+    public Result hotArticle(int limit) {
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         // select id, title from article order by view_counts desc limit 5
-        queryWrapper.select(Article::getId,Article::getTitle);
+        queryWrapper.select(Article::getId, Article::getTitle);
         queryWrapper.orderByDesc(Article::getViewCounts);
-        queryWrapper.last("limit "+limit);
+        queryWrapper.last("limit " + limit);
         List<Article> articles = articleMapper.selectList(queryWrapper);
-        return Result.success(copyList(articles,false,false));
+        return Result.success(copyList(articles, false, false));
     }
 
     @Override
@@ -108,10 +109,10 @@ public class ArticleServiceImpl implements ArticleService {
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         // select id, title from article order by create_date desc limit 5
         queryWrapper.orderByDesc(Article::getCreateDate);
-        queryWrapper.select(Article::getId,Article::getTitle);
-        queryWrapper.last("limit "+limit);
+        queryWrapper.select(Article::getId, Article::getTitle);
+        queryWrapper.last("limit " + limit);
         List<Article> articles = articleMapper.selectList(queryWrapper);
-        return Result.success(copyList(articles,false,false));
+        return Result.success(copyList(articles, false, false));
     }
 
     @Override
@@ -123,14 +124,15 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 1. 根据id查询文章信息
      * 2. 根据bodyId和categoryId做关联查询
+     *
      * @param articleId
      * @return
      */
-    @Cache(expire = 5*60*1000,name = "view_Article")
+    @Cache(expire = 5 * 60 * 1000, name = "view_Article")
     @Override
     public Result findArticleById(Long articleId) {
         Article article = articleMapper.selectById(articleId);
-        ArticleVo articleVo = copy(article, true, true,true,true);
+        ArticleVo articleVo = copy(article, true, true, true, true);
         return Result.success(articleVo);
     }
 
@@ -140,6 +142,7 @@ public class ArticleServiceImpl implements ArticleService {
      * 2. 作者id 当前的登录用户中获取
      * 3. 标签 将标签加入到关联列表中
      * 4. body 内容存储 article bodyId
+     *
      * @param articleParam
      * @return
      */
@@ -156,19 +159,19 @@ public class ArticleServiceImpl implements ArticleService {
         article.setCreateDate(Long.valueOf(dateFormat.format(System.currentTimeMillis())));
         List<TagVo> tags = articleParam.getTags();
         Long articleId;
-        boolean isEdit=false;
-        if (articleParam.getId()!=null) isEdit = true;
-        if (isEdit){
+        boolean isEdit = false;
+        if (articleParam.getId() != null) isEdit = true;
+        if (isEdit) {
             article.setId(articleParam.getId());
             //删掉原来存在的tag
             LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(ArticleTag::getArticleId,article.getId());
+            queryWrapper.eq(ArticleTag::getArticleId, article.getId());
             articleTagMapper.delete(queryWrapper);
             //删掉原来存在的body
             LambdaQueryWrapper<ArticleBody> queryWrapperBody = new LambdaQueryWrapper<>();
-            queryWrapperBody.eq(ArticleBody::getArticleId,article.getId());
+            queryWrapperBody.eq(ArticleBody::getArticleId, article.getId());
             articleBodyMapper.delete(queryWrapperBody);
-        }else {
+        } else {
             article.setAuthorId(sysUser.getId());
             article.setWeight(Article.Article_Common);
             article.setViewCounts(0);
@@ -178,7 +181,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
         articleId = article.getId();
         //把文章关联的所有标签都加入到关联表中
-        if (tags!=null){
+        if (tags != null) {
             for (TagVo tag : tags) {
                 ArticleTag articleTag = new ArticleTag();
                 articleTag.setTagId(tag.getId());
@@ -196,11 +199,11 @@ public class ArticleServiceImpl implements ArticleService {
         article.setBodyId(articleBody.getId());
         articleMapper.updateById(article);
         Map<String, String> map = new HashMap<>();
-        map.put("id",article.getId().toString());
+        map.put("id", article.getId().toString());
         //发一条信息给rocketmq，当前文章更新/发布了，更新一下缓存
         ArticleMessage articleMessage = new ArticleMessage();
         articleMessage.setArticleId(article.getId());
-        rocketMQTemplate.convertAndSend("blog-update-article",articleMessage);
+        rocketMQTemplate.convertAndSend("blog-update-article", articleMessage);
         return Result.success(map);
     }
 
@@ -208,17 +211,17 @@ public class ArticleServiceImpl implements ArticleService {
     public Result searchArticle(SearchParam searchParam) {
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(Article::getViewCounts);
-        queryWrapper.select(Article::getId,Article::getTitle);
-        queryWrapper.like(Article::getTitle,searchParam.getSearch());
+        queryWrapper.select(Article::getId, Article::getTitle);
+        queryWrapper.like(Article::getTitle, searchParam.getSearch());
         List<Article> articles = articleMapper.selectList(queryWrapper);
-        return Result.success(copyList(articles,false,false));
+        return Result.success(copyList(articles, false, false));
     }
 
     @Override
     public Result deleteArticleById(Long articleId) {
         articleMapper.deleteById(articleId);
         LambdaQueryWrapper<ArticleBody> bodyLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        bodyLambdaQueryWrapper.eq(ArticleBody::getArticleId,articleId);
+        bodyLambdaQueryWrapper.eq(ArticleBody::getArticleId, articleId);
         //丢给线程池，在对象存储中删除文章里包含的图片文件
         ArticleBody articleBody = articleBodyMapper.selectOne(bodyLambdaQueryWrapper);
         threadService.deleteImages(articleBody);
@@ -226,22 +229,22 @@ public class ArticleServiceImpl implements ArticleService {
         articleBodyMapper.delete(bodyLambdaQueryWrapper);
         //删除articleTag
         LambdaQueryWrapper<ArticleTag> tagLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        tagLambdaQueryWrapper.eq(ArticleTag::getArticleId,articleId);
+        tagLambdaQueryWrapper.eq(ArticleTag::getArticleId, articleId);
         articleTagMapper.delete(tagLambdaQueryWrapper);
         //删除comment
         Result deleteResult = commentService.deleteCommentByArticleId(articleId);
         //发一条信息给rocketmq，当前文章更新了，更新一下缓存
         ArticleMessage articleMessage = new ArticleMessage();
-        rocketMQTemplate.convertAndSend("blog-update-article",articleMessage);
+        rocketMQTemplate.convertAndSend("blog-update-article", articleMessage);
         return deleteResult;
     }
 
     @Override
     public Result findArticleByAuthorId(Long authorId) {
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Article::getAuthorId,authorId);
+        queryWrapper.eq(Article::getAuthorId, authorId);
         List<Article> articles = articleMapper.selectList(queryWrapper);
-        return Result.success(copyList(articles,true,true,true,true));
+        return Result.success(copyList(articles, true, true, true, true));
     }
 
     @Override
@@ -267,30 +270,31 @@ public class ArticleServiceImpl implements ArticleService {
 
     /**
      * 将article列表转化为articleVo列表
+     *
      * @param records
      * @return
      */
-    private List<ArticleVo> copyList(List<Article> records,boolean isTag, boolean isAuthor){
+    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor) {
         List<ArticleVo> articleVos = new ArrayList<>();
-        for (Article record:records){
-            articleVos.add(copy(record,isTag,isAuthor,false,false));
+        for (Article record : records) {
+            articleVos.add(copy(record, isTag, isAuthor, false, false));
         }
         return articleVos;
     }
 
-    private List<ArticleVo> copyList(List<Article> records,boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory){
+    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory) {
         List<ArticleVo> articleVos = new ArrayList<>();
-        for (Article record:records){
-            articleVos.add(copy(record,isTag,isAuthor,isBody,isCategory));
+        for (Article record : records) {
+            articleVos.add(copy(record, isTag, isAuthor, isBody, isCategory));
         }
         return articleVos;
     }
 
-    private ArticleVo copy(Article article, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory){
+    private ArticleVo copy(Article article, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory) {
         ArticleVo articleVo = new ArticleVo();
         try {
             BeanUtils.copyProperties(article, articleVo);
-            if (article.getCreateDate()!=null) {
+            if (article.getCreateDate() != null) {
                 Date date = new SimpleDateFormat("yyyyMMddHHmmss").parse(String.valueOf(article.getCreateDate()));
                 articleVo.setCreateDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
             }
@@ -300,7 +304,7 @@ public class ArticleServiceImpl implements ArticleService {
             if (isAuthor) {
                 SysUser author = sysUserService.findUserById(article.getAuthorId());
                 UserVo userVo = new UserVo();
-                BeanUtils.copyProperties(author,userVo);
+                BeanUtils.copyProperties(author, userVo);
                 articleVo.setAuthor(userVo);
             }
 
@@ -310,7 +314,7 @@ public class ArticleServiceImpl implements ArticleService {
             if (isCategory) {
                 articleVo.setCategory(categoryService.findCategoryById(article.getCategoryId()));
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return articleVo;
@@ -321,5 +325,18 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleBodyVo articleBodyVo = new ArticleBodyVo();
         articleBodyVo.setContent(articleBody.getContent());
         return articleBodyVo;
+    }
+
+    public void replaceUrl() {
+        List<ArticleBody> articleBodies = articleBodyMapper.selectList(new LambdaQueryWrapper<>());
+        for (ArticleBody articleBody : articleBodies) {
+            String content = articleBody.getContent();
+            String contentHtml = articleBody.getContentHtml();
+            String replaceContent = StringUtils.replace(content, "rovo5kjl1.hn-bkt.clouddn.com", "qny.tzsblog.xyz");
+            String replaceContentHtml = StringUtils.replace(contentHtml, "rovo5kjl1.hn-bkt.clouddn.com", "qny.tzsblog.xyz");
+            articleBody.setContent(replaceContent);
+            articleBody.setContentHtml(replaceContentHtml);
+            articleBodyMapper.updateById(articleBody);
+        }
     }
 }

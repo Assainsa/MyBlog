@@ -51,5 +51,7 @@ public interface ArticleService {
 
     Result processArticleById(Long articleId, boolean view);
 
+    void replaceUrl();
+
     /*    Result updateTime();*/
 }

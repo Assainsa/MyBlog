@@ -39,7 +39,7 @@ mybatis-plus:
 qiniu:
   accessKey: bgsk1h-Cbkjx7ELwT2uQTRqpZc76JctxiT4QRwIR
   accessSecretKey: mJfYRoEmgsNbMNS2l5sqtUuSTitrcfnbzKvoaobQ
-  url: http://rovo5kjl1.hn-bkt.clouddn.com/
+  url: http://qny.tzsblog.xyz/
   bucket: blog-image-zlt
 mybatis:
   configuration:

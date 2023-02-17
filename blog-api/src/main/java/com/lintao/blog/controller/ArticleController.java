@@ -17,6 +17,7 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
+
     /**
      * 首页 文章列表
      * @param pageParams
@@ -93,5 +94,10 @@ public class ArticleController {
     @PostMapping("author/{id}")
     public Result getArticleByAuthorId(@PathVariable("id") Long authorId){
         return articleService.findArticleByAuthorId(authorId);
+    }
+
+    @GetMapping("updateUrl")
+    public void updateUrl(){
+        articleService.replaceUrl();
     }
 }

@@ -27,6 +27,9 @@
             <if test="year != null and year.length>0 and month!=null and month.length>0">
                 and year(create_date) = #{year} and month(create_date) = #{month}
             </if>
+            <if test="authorId != null">
+                and author_id = #{authorId}
+            </if>
         </where>
         order by weight desc, create_date desc
     </select>
