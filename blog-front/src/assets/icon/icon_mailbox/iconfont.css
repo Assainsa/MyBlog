@@ -1,0 +1,17 @@
+@font-face {
+  font-family: "iconfont-mailbox"; /* Project id  */
+  src: url('iconfont.ttf?t=1676221579894') format('truetype');
+}
+
+.iconfont-mailbox {
+  font-family: "iconfont-mailbox" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-youxiang:before {
+  content: "\e667";
+}
+

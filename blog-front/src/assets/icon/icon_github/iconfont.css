@@ -1,0 +1,16 @@
+@font-face {
+  font-family: "iconfont-github"; /* Project id  */
+  src: url('iconfont.ttf?t=1676016658547') format('truetype');
+}
+
+.iconfont-github {
+  font-family: "iconfont-github" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-github-fill:before {
+  content: "\e885";
+}
